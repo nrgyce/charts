@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Calciumzufuhr mit D-A-CH Stepline</title>
+  <script src="https://cdn.plot.ly/plotly-2.30.0.min.js"></script>
+</head>
+<body>
+  <div id="boxplot" style="width:1200px;height:600px;"></div>
+
+  <script>
+    const ageGroups = ["14–18", "19–24", "25–34", "35–50", "51–64", "65–80"];
+    const dach = [1200, 1000, 1000, 1000, 1000, 1000];
+
+    const maleData = [
+      [623, 932, 1194, 1548, 2176],
+      [545, 877, 1179, 1503, 2422],
+      [588, 862, 1134, 1492, 2226],
+      [543, 845, 1088, 1398, 2109],
+      [499, 762, 989, 1294, 1908],
+      [468, 707, 909, 1171, 1669]
+    ];
+    const femaleData = [
+      [473, 738, 969, 1226, 1784],
+      [471, 769, 985, 1222, 1756],
+      [515, 794, 1002, 1262, 1804],
+      [530, 799, 1014, 1264, 1815],
+      [522, 760, 954, 1189, 1700],
+      [469, 686, 873, 1087, 1553]
+    ];
+
+    function simulate(p) {
+      return [p[0], p[1], p[1], p[2], p[2], p[3], p[3], p[4]];
+    }
+
+    const xLabels = ageGroups;
+    const xNumeric = [0, 1, 2, 3, 4, 5, 6];
+
+    const traces = [];
+
+    // Männer Boxplots
+    for (let i = 0; i < ageGroups.length; i++) {
+      traces.push({
+        type: 'box',
+        y: simulate(maleData[i]),
+        x: Array(8).fill(xNumeric[i] - 0.15),
+        name: 'Männer',
+        boxpoints: false,
+        width: 0.3,
+        marker: { color: 'rgba(0, 100, 255, 0.6)' },
+        line: { color: 'blue' },
+        legendgroup: 'Männer',
+        showlegend: i === 0
+      });
+    }
+
+    // Frauen Boxplots
+    for (let i = 0; i < ageGroups.length; i++) {
+      traces.push({
+        type: 'box',
+        y: simulate(femaleData[i]),
+        x: Array(8).fill(xNumeric[i] + 0.15),
+        name: 'Frauen',
+        boxpoints: false,
+        width: 0.3,
+        marker: { color: 'rgba(255, 100, 100, 0.6)' },
+        line: { color: 'darkred' },
+        legendgroup: 'Frauen',
+        showlegend: i === 0
+      });
+    }
+
+    // D-A-CH Stepline (shifted by -0.5)
+    const stepX = [], stepY = [];
+    for (let i = 0; i <= xNumeric.length; i++) {
+      const x = xNumeric[i] - 0.5;
+      if (i > 0) stepX.push(x);
+      stepX.push(x);
+      stepY.push(dach[i]);
+      if (i < xNumeric.length - 1) stepY.push(dach[i]);
+    }
+    stepX.push(xNumeric[xNumeric.length - 1] + 0.5);
+
+    const dachTrace = {
+      type: 'scatter',
+      x: stepX,
+      y: stepY,
+      mode: 'lines',
+      name: 'D-A-CH Referenz',
+      line: {
+        dash: 'dash',
+        color: 'black',
+        width: 2,
+        shape: 'hv'
+      },
+      hoverinfo: 'none',
+      showlegend: true
+    };
+
+    traces.push(dachTrace);
+
+    const layout = {
+      title: 'Calciumzufuhr in mg/Tag nach Altersgruppe und Geschlecht (NVS II)',
+      xaxis: {
+        title: 'Altersgruppen',
+        tickmode: 'array',
+        tickvals: xNumeric,
+        ticktext: xLabels
+      },
+      yaxis: {
+        title: 'Calciumzufuhr (mg/Tag)',
+        range: [400, 2500]
+      },
+      boxmode: 'group',
+      legend: {
+        orientation: 'h',
+        x: 0.5,
+        xanchor: 'center',
+        y: -0.25
+      }
+    };
+
+    Plotly.newPlot('boxplot', traces, layout, { displayModeBar: false });
+  </script>
+</body>
+</html>
