@@ -6,11 +6,14 @@
   <script src="https://cdn.plot.ly/plotly-2.30.0.min.js"></script>
 </head>
 <body>
-  <div id="boxplot" style="width:1200px;height:600px;"></div>
+  <div id="boxplot" style="width:1200px;height:1000px;"></div>
 
   <script>
     const ageGroups = ["14–18", "19–24", "25–34", "35–50", "51–64", "65–80"];
     const dach = [1200, 1000, 1000, 1000, 1000, 1000];
+    const xLabels = ageGroups;
+    const xNumeric = [0, 1, 2, 3, 4, 5, 6];
+    const traces = [];
 
     const maleData = [
       [623, 932, 1194, 1548, 2176],
@@ -20,6 +23,7 @@
       [499, 762, 989, 1294, 1908],
       [468, 707, 909, 1171, 1669]
     ];
+
     const femaleData = [
       [473, 738, 969, 1226, 1784],
       [471, 769, 985, 1222, 1756],
@@ -33,11 +37,6 @@
       return [p[0], p[1], p[1], p[2], p[2], p[3], p[3], p[4]];
     }
 
-    const xLabels = ageGroups;
-    const xNumeric = [0, 1, 2, 3, 4, 5, 6];
-
-    const traces = [];
-
     // Männer Boxplots
     for (let i = 0; i < ageGroups.length; i++) {
       traces.push({
@@ -46,9 +45,9 @@
         x: Array(8).fill(xNumeric[i] - 0.15),
         name: 'Männer',
         boxpoints: false,
-        width: 0.3,
+        width: 0.25,
         marker: { color: 'rgba(0, 100, 255, 0.6)' },
-        line: { color: 'blue' },
+        line: { color: 'rgba(0, 100, 255, 0.6)' },
         legendgroup: 'Männer',
         showlegend: i === 0
       });
@@ -62,15 +61,15 @@
         x: Array(8).fill(xNumeric[i] + 0.15),
         name: 'Frauen',
         boxpoints: false,
-        width: 0.3,
-        marker: { color: 'rgba(255, 100, 100, 0.6)' },
-        line: { color: 'darkred' },
+        width: 0.25,
+        marker: { color: 'rgba(160, 32, 240, 0.6)' },
+        line: { color: 'rgba(160, 32, 240, 0.6)', width: 2},
         legendgroup: 'Frauen',
         showlegend: i === 0
       });
     }
 
-    // D-A-CH Stepline (shifted by -0.5)
+    // D-A-CH Referenzlinie
     const stepX = [], stepY = [];
     for (let i = 0; i <= xNumeric.length; i++) {
       const x = xNumeric[i] - 0.5;
@@ -80,48 +79,204 @@
       if (i < xNumeric.length - 1) stepY.push(dach[i]);
     }
     stepX.push(xNumeric[xNumeric.length - 1] + 0.5);
-
-    const dachTrace = {
+    traces.push({
       type: 'scatter',
       x: stepX,
       y: stepY,
       mode: 'lines',
       name: 'D-A-CH Referenz',
+      line: { color: 'black', width: 3, shape: 'hv' },
+      hoverinfo: 'none',
+      showlegend: true
+    });
+
+    // EFSA Danger Zone (shape über UL 2500)
+    traces.push({
+      type: 'scatter',
+      x: [0.5, 5.5, 5.5, 0.5],
+      y: [2500, 2500, 3500, 3500],
+      fill: 'toself',
+      fillcolor: 'rgba(139, 0, 0, 0.1)',
+      line: { width: 0 },
+      mode: 'lines',
+      marker: { size: 0 },
+      name: 'EFSA Danger Zone',
+      hoverinfo: 'skip',
+      showlegend: false,
+      legendgroup: 'UL Erwachsene (EFSA 2012)'
+    });
+
+    // EFSA UL Linie
+    traces.push({
+      type: 'scatter',
+      x: [0.5, 5.5],
+      y: [2500, 2500],
+      mode: 'lines',
+      name: 'UL Erwachsene (EFSA 2012)',
+      line: { color: 'darkred', width: 3 },
+      hoverinfo: 'none',
+      showlegend: true,
+      legendgroup: 'UL Erwachsene (EFSA 2012)'
+    });
+
+    // FNB Danger Zone (shape über variablem UL)
+    const fnbY = [3000, 2500, 2500, 2500, 2000, 2000];
+    const fnbStepX = [];
+    const fnbStepY = [];
+
+    for (let i = 0; i < fnbY.length; i++) {
+      const xStart = xNumeric[i] - 0.5;
+      const xEnd = xNumeric[i] + 0.5;
+
+      fnbStepX.push(xStart, xEnd);
+      fnbStepY.push(fnbY[i], fnbY[i]);
+    }
+
+    // Fläche darüber
+    const fnbDangerZone = {
+      type: 'scatter',
+      x: [...fnbStepX, ...fnbStepX.slice().reverse()],
+      y: [...fnbStepY, ...fnbStepX.slice().reverse().map(() => 3500)],
+      fill: 'toself',
+      fillcolor: 'rgba(139, 0, 0, 0.1)',
+      line: { width: 0 },
+      mode: 'lines',
+      marker: { size: 0 },
+      name: 'FNB Danger Zone',
+      hoverinfo: 'skip',
+      showlegend: false,
+      legendgroup: 'UL nach FNB (USA, 2011)'
+    };
+
+    traces.push(fnbDangerZone);
+
+    // FNB UL Linie
+    traces.push({
+      type: 'scatter',
+      x: fnbStepX,
+      y: fnbStepY,
+      mode: 'lines',
+      name: 'UL nach FNB (USA, 2011)',
       line: {
-        dash: 'dash',
-        color: 'black',
-        width: 2,
+        color: 'darkred',
+        width: 3,
         shape: 'hv'
       },
       hoverinfo: 'none',
-      showlegend: true
-    };
+      showlegend: true,
+      legendgroup: 'UL nach FNB (USA, 2011)'
+    });
 
-    traces.push(dachTrace);
+    // Dummy für "Anmerkungen"
+    traces.push({
+      x: [null],
+      y: [null],
+      mode: 'lines',
+      name: 'Anmerkungen',
+      hoverinfo: 'none',
+      showlegend: true,
+      line: { color: 'rgba(0,0,0,0)' },
+      legendgroup: 'annotations'
+    });
+
+    const efsaAnnotations = [
+      {
+        x: 1.6,
+        y: 3000,
+        xref: 'x',
+        yref: 'y',
+        text: 'Hohe Supplementzufuhr von Calciumcarbonat <br>könnte das Risiko für CAS/MAS erhöhen<br>– laut EFSA 2012 aber kein Schwellenwert.',
+        showarrow: false,
+        arrowhead: 6,
+        ax: 200,
+        ay: -0,
+        font: { color: 'darkred', size: 12 },
+        align: 'center',
+      },  
+      {
+        x: 4,
+        y: 2500,
+        xref: 'x',
+        yref: 'y',
+        text: 'EFSA legt 2.500 mg/Tag als UL für Erwachsene fest.<br>Für Kinder und Jugendliche konnte kein UL abgeleitet werden –<br>es wurden jedoch keine Nebenwirkungen beobachtet.',
+        showarrow: true,
+        arrowhead: 6,
+        ax: +60,
+        ay: -70,
+        font: { color: 'darkred', size: 12 }
+    }];
+
+    const fnbAnnotations = [
+      {
+        x: 0,
+        y: 3000,
+        xref: 'x',
+        yref: 'y',
+        text: 'FNB/IOM (2011): Ab ~3.000 mg/Tag können Supplemente <br>mit Calciumcarbonat problematisch sein <br>– v. a. bei Nierenfunktionsstörungen.',
+        showarrow: true,
+        arrowhead: 6,
+        ax: 120,
+        ay: -70,
+        align: 'center',
+        font: { color: 'darkred', size: 12 },
+      },
+      {
+        x: 4.5,
+        y: 2000,
+        xref: 'x',
+        yref: 'y',
+        text: 'UL = 2.000 mg/Tag für ältere Erwachsene<br>(FNB/IOM 2011) – basiert auf LOAEL<br>für erhöhtes Risiko von Nierensteinen.',
+        showarrow: true,
+        arrowhead: 6,
+        ax: 40,
+        ay: -60,
+        align: 'center',
+        font: { color: 'darkred', size: 12 },
+      }
+    ];
 
     const layout = {
-      title: 'Calciumzufuhr in mg/Tag nach Altersgruppe und Geschlecht (NVS II)',
+      title: 'Calciumzufuhr in mg/Tag nach Altersgruppe und Geschlecht (NVS II)<br>Box zeigt mittlere 50 % (Perzentil 25–75), Whisker = 5.–95. Perzentil',
       xaxis: {
         title: 'Altersgruppen',
         tickmode: 'array',
         tickvals: xNumeric,
-        ticktext: xLabels
+        ticktext: xLabels,
+        range: [-0.5, 5.5]
       },
       yaxis: {
         title: 'Calciumzufuhr (mg/Tag)',
-        range: [400, 2500]
+        range: [0, 3500]
       },
       boxmode: 'group',
+      annotations: efsaAnnotations.concat(fnbAnnotations),
       legend: {
         orientation: 'h',
         x: 0.5,
         xanchor: 'center',
-        y: -0.25
+        y: -0.1
       }
     };
 
-    Plotly.newPlot('boxplot', traces, layout); 
-    //, { displayModeBar: false });
+    Plotly.newPlot('boxplot', traces, layout, { displayModeBar: false });
+
+    // Interaktivität für Annotationen
+    document.getElementById('boxplot').on('plotly_restyle', () => {
+      const fullData = document.getElementById('boxplot')._fullData;
+      const annotationsVisible = fullData.find(trace => trace.name === 'Anmerkungen')?.visible !== 'legendonly';
+
+      let newAnnotations = [];
+      if (annotationsVisible) {
+        if (fullData.some(trace => trace.name === 'UL Erwachsene (EFSA 2012)' && trace.visible !== 'legendonly')) {
+          newAnnotations.push(...efsaAnnotations);
+        }
+        if (fullData.some(trace => trace.name === 'UL nach FNB (USA, 2011)' && trace.visible !== 'legendonly')) {
+          newAnnotations.push(...fnbAnnotations);
+        }
+      }
+      Plotly.relayout('boxplot', { annotations: newAnnotations });
+    });
   </script>
 </body>
 </html>
+
