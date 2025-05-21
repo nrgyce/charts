@@ -103,7 +103,8 @@
       name: 'EFSA Danger Zone',
       hoverinfo: 'skip',
       showlegend: false,
-      legendgroup: 'UL Erwachsene (EFSA 2012)'
+      legendgroup: 'UL Erwachsene (EFSA 2012)',
+      visible: 'legendonly'
     });
 
     // EFSA UL Linie
@@ -116,7 +117,8 @@
       line: { color: 'darkred', width: 3 },
       hoverinfo: 'none',
       showlegend: true,
-      legendgroup: 'UL Erwachsene (EFSA 2012)'
+      legendgroup: 'UL Erwachsene (EFSA 2012)',
+      visible: 'legendonly'
     });
 
     // FNB Danger Zone (shape über variablem UL)
@@ -176,7 +178,8 @@
       hoverinfo: 'none',
       showlegend: true,
       line: { color: 'rgba(0,0,0,0)' },
-      legendgroup: 'annotations'
+      legendgroup: 'annotations',
+      visible: 'legendonly'
     });
 
     const efsaAnnotations = [
@@ -249,7 +252,7 @@
         range: [0, 3500]
       },
       boxmode: 'group',
-      annotations: efsaAnnotations.concat(fnbAnnotations),
+      annotations: [],
       legend: {
         orientation: 'h',
         x: 0.5,
@@ -279,4 +282,5 @@
   </script>
 </body>
 </html>
+
 
